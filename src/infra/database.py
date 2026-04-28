@@ -1,25 +1,27 @@
 import os
+from collections.abc import AsyncIterator
 
-from sqlalchemy import create_engine
-from sqlalchemy.orm import DeclarativeBase, sessionmaker
+from sqlalchemy.ext.asyncio import (
+    AsyncSession,
+    async_sessionmaker,
+    create_async_engine,
+)
+from sqlalchemy.orm import DeclarativeBase
 
-DATABASE_URL = os.getenv("DATABASE_URL", "localhost:5432")
-
-engine = create_engine(
-    DATABASE_URL,
-    connect_args={"check_same_thread": False},
+DATABASE_URL = os.getenv(
+    "DATABASE_URL",
+    "postgresql+asyncpg://postgres:postgres@localhost:5332/postgres",
 )
 
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+engine = create_async_engine(DATABASE_URL, pool_pre_ping=True)
+
+SessionLocal = async_sessionmaker(engine, expire_on_commit=False, class_=AsyncSession)
 
 
 class Base(DeclarativeBase):
     pass
 
 
-def get_db():
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
+async def get_db() -> AsyncIterator[AsyncSession]:
+    async with SessionLocal() as session:
+        yield session

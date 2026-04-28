@@ -1,12 +1,22 @@
+from datetime import datetime
 
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict, Field
+
 
 class ProjectCreate(BaseModel):
-    name: str
-    description: str
+    name: str = Field(..., min_length=1, max_length=255)
+    description: str | None = None
 
-class ProjectCreateResponse(BaseModel):
+
+class ProjectUpdate(BaseModel):
+    name: str | None = Field(None, min_length=1, max_length=255)
+    description: str | None = None
+
+
+class ProjectOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
     id: int
     name: str
-    description: str
-    created_at: str
+    description: str | None
+    created_at: datetime
